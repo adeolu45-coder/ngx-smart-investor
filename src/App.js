@@ -8,11 +8,17 @@ function App() {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [data, setData] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (token) {
       setIsLoggedIn(true);
+
+      fetch(`${API_BASE}/api/health`)
+        .then((res) => res.json())
+        .then((d) => setData(d))
+        .catch(() => setData({ error: "Failed to load" }));
     }
   }, []);
 
@@ -26,7 +32,6 @@ function App() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
         },
         body: JSON.stringify({ username, password }),
       });
@@ -36,9 +41,14 @@ function App() {
       if (response.ok && data.access_token) {
         localStorage.setItem("access_token", data.access_token);
         setIsLoggedIn(true);
-        setResult("Login successful.");
+        setResult("Login successful");
+
+        // fetch data after login
+        fetch(`${API_BASE}/api/health`)
+          .then((res) => res.json())
+          .then((d) => setData(d));
       } else {
-        setResult(data.detail || "Login failed");
+        setResult("Login failed");
       }
     } catch (error) {
       setResult("Network error");
@@ -50,65 +60,51 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     setIsLoggedIn(false);
-    setResult("Logged out.");
-    setPassword("");
+    setData(null);
   };
 
   if (isLoggedIn) {
     return (
-      <div style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
-        <h1>NGX Smart Investor Dashboard</h1>
-        <p>Welcome, {username}.</p>
+      <div style={{ padding: "40px" }}>
+        <h1>Dashboard</h1>
+        <p>Welcome, {username}</p>
 
-        <div style={{ marginTop: "20px" }}>
-          <button onClick={handleLogout} style={{ padding: "10px 16px" }}>
-            Logout
-          </button>
-        </div>
+        <button onClick={handleLogout}>Logout</button>
 
-        <div style={{ marginTop: "30px" }}>
-          <h2>Next features coming</h2>
-          <p>• Market data</p>
-          <p>• Stock prices</p>
-          <p>• Signals</p>
-          <p>• User management</p>
-        </div>
+        <h3>Backend Data:</h3>
+
+        {data ? (
+          <pre>{JSON.stringify(data, null, 2)}</pre>
+        ) : (
+          <p>Loading...</p>
+        )}
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
-      <h1>NGX Smart Investor</h1>
+    <div style={{ padding: "40px" }}>
+      <h1>Login</h1>
 
-      <form onSubmit={handleLogin} style={{ maxWidth: "400px" }}>
-        <div style={{ marginBottom: "12px" }}>
-          <label>Username</label>
-          <br />
-          <input
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            style={{ width: "100%", padding: "8px" }}
-          />
-        </div>
+      <input
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <br />
+      <br />
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <br />
+      <br />
 
-        <div style={{ marginBottom: "12px" }}>
-          <label>Password</label>
-          <br />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{ width: "100%", padding: "8px" }}
-          />
-        </div>
+      <button onClick={handleLogin}>
+        {loading ? "Loading..." : "Login"}
+      </button>
 
-        <button type="submit" disabled={loading} style={{ padding: "10px 16px" }}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
-
-      {result && <p style={{ marginTop: "20px" }}>{result}</p>}
+      <p>{result}</p>
     </div>
   );
 }
