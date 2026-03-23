@@ -15,7 +15,7 @@ function App() {
     if (token) {
       setIsLoggedIn(true);
 
-      fetch(`${API_BASE}/api/health`)
+      fetch(`${API_BASE}/`)
         .then((res) => res.json())
         .then((d) => setData(d))
         .catch(() => setData({ error: "Failed to load" }));
