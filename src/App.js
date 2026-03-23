@@ -15,7 +15,13 @@ function App() {
     if (token) {
       setIsLoggedIn(true);
 
-      fetch(`${API_BASE}/api/status`)
+      const token = localStorage.getItem("access_token");
+
+fetch(`${API_BASE}/api/status`, {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+})
         .then((res) => res.json())
         .then((d) => setData(d))
         .catch(() => setData({ error: "Failed to load" }));
