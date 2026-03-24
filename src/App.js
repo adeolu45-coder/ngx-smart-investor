@@ -15,11 +15,27 @@ export default function App() {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-const res = await fetch(`${API_BASE}/api/status`, {
-  headers: token
-    ? { Authorization: `Bearer ${token}` }
-    : {},
-});
+useEffect(() => {
+  const fetchStatus = async () => {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(`${API_BASE}/api/status`, {
+      headers: token
+        ? { Authorization: `Bearer ${token}` }
+        : {},
+    });
+
+    const data = await res.json();
+    setStatusData(data);
+  };
+
+  fetchStatus();
+
+  const token = localStorage.getItem("token");
+  if (token) {
+    setIsLoggedIn(true);
+  }
+}, []);
     if (token) {
       setIsLoggedIn(true);
       fetchStatus(token);
