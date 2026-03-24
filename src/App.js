@@ -13,7 +13,13 @@ export default function App() {
   const [statusData, setStatusData] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
+    const token = localStorage.getItem("token");
+
+const res = await fetch(`${API_BASE}/api/status`, {
+  headers: token
+    ? { Authorization: `Bearer ${token}` }
+    : {},
+});
     if (token) {
       setIsLoggedIn(true);
       fetchStatus(token);
