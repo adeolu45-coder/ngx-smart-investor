@@ -77,6 +77,10 @@ app = FastAPI(
     version="2.0.0",
     lifespan=lifespan
 )
+
+@app.get("/")
+def root():
+    return {"message": "NGX Smart Investor API is live"}
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
