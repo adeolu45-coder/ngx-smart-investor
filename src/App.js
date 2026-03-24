@@ -59,6 +59,7 @@ export default function App() {
 
       if (response.ok && data.access_token) {
         localStorage.setItem("access_token", data.access_token);
+        alert(data.access_token);
         setIsLoggedIn(true);
         setResult("Login successful");
         fetchStatus(data.access_token);
