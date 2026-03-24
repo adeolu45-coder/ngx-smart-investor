@@ -12,25 +12,28 @@ export default function App() {
   const [statusData, setStatusData] = useState(null);
 
   const fetchStatus = async (tokenArg) => {
-    const token = tokenArg || localStorage.getItem("access_token");
-    if (!token) {
-      setStatusData({ error: "No token found" });
-      return;
-    }
+  const token = tokenArg || localStorage.getItem("access_token");
 
-    try {
-      const res = await fetch(`${API_BASE}/api/status`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  try {
+    const res = await fetch(`${API_BASE}/api/status`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-      const data = await res.json();
-      setStatusData(data);
-    } catch (error) {
-      setStatusData({ error: "Failed to load" });
-    }
-  };
+    const data = await res.json();
+    setStatusData({
+      httpStatus: res.status,
+      ok: res.ok,
+      data: data,
+    });
+  } catch (error) {
+    setStatusData({
+      error: "Failed to load",
+      details: String(error),
+    });
+  }
+};
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
