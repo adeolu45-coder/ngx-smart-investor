@@ -13,21 +13,28 @@ export default function App() {
   const [statusData, setStatusData] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
-useEffect(() => {
-  const fetchStatus = async () => {
-    const token = localStorage.getItem("token");
+  if (token) {
+    setIsLoggedIn(true);
+    fetchStatus(token);
+  }
+}, []);
 
+const fetchStatus = async (token) => {
+  try {
     const res = await fetch(`${API_BASE}/api/status`, {
-      headers: token
-        ? { Authorization: `Bearer ${token}` }
-        : {},
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     const data = await res.json();
     setStatusData(data);
-  };
+  } catch (error) {
+    setStatusData({ error: "Failed to load" });
+  }
+};
 
   fetchStatus();
 
