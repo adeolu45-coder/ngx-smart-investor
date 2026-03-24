@@ -9,30 +9,39 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [data, setData] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastChecked, setLastChecked] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (token) {
       setIsLoggedIn(true);
-
-      const token = localStorage.getItem("access_token");
-
-const token = localStorage.getItem("access_token");
-
-fetch(`${API_BASE}/api/status`, {
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-})
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-})
-        .then((res) => res.json())
-        .then((d) => setData(d))
-        .catch(() => setData({ error: "Failed to load" }));
+      fetchStatus(token);
     }
   }, []);
+
+  const fetchStatus = async (tokenFromArg) => {
+    const token = tokenFromArg || localStorage.getItem("access_token");
+    if (!token) return;
+
+    setRefreshing(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/status`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await res.json();
+      setData(result);
+      setLastChecked(new Date().toLocaleString());
+    } catch (err) {
+      setData({ error: "Failed to load" });
+      setLastChecked(new Date().toLocaleString());
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -44,23 +53,20 @@ fetch(`${API_BASE}/api/status`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify({ username, password }),
       });
 
-      const data = await response.json();
+      const loginData = await response.json();
 
-      if (response.ok && data.access_token) {
-        localStorage.setItem("access_token", data.access_token);
+      if (response.ok && loginData.access_token) {
+        localStorage.setItem("access_token", loginData.access_token);
         setIsLoggedIn(true);
-        setResult("Login successful");
-
-        // fetch data after login
-        fetch(`${API_BASE}/api/health`)
-          .then((res) => res.json())
-          .then((d) => setData(d));
+        setResult("Login successful.");
+        fetchStatus(loginData.access_token);
       } else {
-        setResult("Login failed");
+        setResult(loginData.detail || "Login failed");
       }
     } catch (error) {
       setResult("Network error");
@@ -73,50 +79,80 @@ fetch(`${API_BASE}/api/status`, {
     localStorage.removeItem("access_token");
     setIsLoggedIn(false);
     setData(null);
+    setLastChecked("");
+    setResult("Logged out.");
+    setPassword("");
   };
 
   if (isLoggedIn) {
     return (
-      <div style={{ padding: "40px" }}>
-        <h1>Dashboard</h1>
-        <p>Welcome, {username}</p>
+      <div style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
+        <h1>NGX Smart Investor Dashboard</h1>
+        <p>Welcome, {username}.</p>
 
-        <button onClick={handleLogout}>Logout</button>
+        <div style={{ marginTop: "20px", marginBottom: "20px" }}>
+          <button onClick={handleLogout} style={{ padding: "10px 16px", marginRight: "10px" }}>
+            Logout
+          </button>
 
-        <h3>Backend Data:</h3>
+          <button onClick={() => fetchStatus()} style={{ padding: "10px 16px" }}>
+            {refreshing ? "Refreshing..." : "Refresh Data"}
+          </button>
+        </div>
 
-        {data ? (
-          <pre>{JSON.stringify(data, null, 2)}</pre>
-        ) : (
-          <p>Loading...</p>
-        )}
+        <div style={{ marginTop: "20px" }}>
+          <p><strong>Market data type:</strong> End-of-day (not live)</p>
+          <p><strong>Best update time:</strong> After 6:30 PM WAT</p>
+          {lastChecked && <p><strong>Last checked:</strong> {lastChecked}</p>}
+        </div>
+
+        <div style={{ marginTop: "30px" }}>
+          <h2>Backend Status</h2>
+
+          {data ? (
+            <pre style={{ background: "#f4f4f4", padding: "16px", borderRadius: "8px" }}>
+              {JSON.stringify(data, null, 2)}
+            </pre>
+          ) : (
+            <p>Loading data...</p>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "40px" }}>
-      <h1>Login</h1>
+    <div style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
+      <h1>NGX Smart Investor</h1>
 
-      <input
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <br />
-      <br />
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <br />
-      <br />
+      <form onSubmit={handleLogin} style={{ maxWidth: "400px" }}>
+        <div style={{ marginBottom: "12px" }}>
+          <label>Username</label>
+          <br />
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            style={{ width: "100%", padding: "8px" }}
+          />
+        </div>
 
-      <button onClick={handleLogin}>
-        {loading ? "Loading..." : "Login"}
-      </button>
+        <div style={{ marginBottom: "12px" }}>
+          <label>Password</label>
+          <br />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{ width: "100%", padding: "8px" }}
+          />
+        </div>
 
-      <p>{result}</p>
+        <button type="submit" disabled={loading} style={{ padding: "10px 16px" }}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
+      </form>
+
+      {result && <p style={{ marginTop: "20px" }}>{result}</p>}
     </div>
   );
 }
