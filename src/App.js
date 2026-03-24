@@ -9,68 +9,36 @@ export default function App() {
   const [result, setResult] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [lastChecked, setLastChecked] = useState("");
   const [statusData, setStatusData] = useState(null);
 
+  const fetchStatus = async (tokenArg) => {
+    const token = tokenArg || localStorage.getItem("access_token");
+    if (!token) {
+      setStatusData({ error: "No token found" });
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/status`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      setStatusData(data);
+    } catch (error) {
+      setStatusData({ error: "Failed to load" });
+    }
+  };
+
   useEffect(() => {
-  const token = localStorage.getItem("token");
-
-  if (token) {
-    setIsLoggedIn(true);
-    fetchStatus(token);
-  }
-}, []);
-
-const fetchStatus = async (token) => {
-  try {
-    const res = await fetch(`${API_BASE}/api/status`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const data = await res.json();
-    setStatusData(data);
-  } catch (error) {
-    setStatusData({ error: "Failed to load" });
-  }
-};
-
-  fetchStatus();
-
-  const token = localStorage.getItem("token");
-  if (token) {
-    setIsLoggedIn(true);
-  }
-}, []);
+    const token = localStorage.getItem("access_token");
     if (token) {
       setIsLoggedIn(true);
       fetchStatus(token);
     }
   }, []);
-
-  const fetchStatus = async (tokenArg) => {
-    const token = tokenArg || localStorage.getItem("access_token");
-    if (!token) return;
-
-    setRefreshing(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/status`, {
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-});
-
-      const data = await res.json();
-      setStatusData(data);
-      setLastChecked(new Date().toLocaleString());
-    } catch (err) {
-      setStatusData({ error: "Failed to load" });
-      setLastChecked(new Date().toLocaleString());
-    } finally {
-      setRefreshing(false);
-    }
-  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -108,8 +76,6 @@ const fetchStatus = async (token) => {
     localStorage.removeItem("access_token");
     setIsLoggedIn(false);
     setStatusData(null);
-    setLastChecked("");
-    setPassword("");
     setResult("");
   };
 
@@ -239,36 +205,8 @@ const fetchStatus = async (token) => {
         </div>
 
         <div style={cardStyle}>
-          <h2 style={{ marginTop: 0 }}>Market Status</h2>
-          <p style={{ color: "#c7d2e3" }}>Nigerian Stock Exchange overview</p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginTop: "16px" }}>
-            <div style={{ minWidth: "220px" }}>
-              <div style={{ color: "#9fb3c8" }}>Market data type</div>
-              <div style={{ fontSize: "24px", fontWeight: "bold" }}>End-of-day</div>
-            </div>
-            <div style={{ minWidth: "220px" }}>
-              <div style={{ color: "#9fb3c8" }}>Best update time</div>
-              <div style={{ fontSize: "24px", fontWeight: "bold" }}>After 6:30 PM WAT</div>
-            </div>
-            <div style={{ minWidth: "220px" }}>
-              <div style={{ color: "#9fb3c8" }}>Last checked</div>
-              <div style={{ fontSize: "20px", fontWeight: "bold" }}>
-                {lastChecked || "Not checked yet"}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div
-          style={{
-            ...cardStyle,
-            background: "linear-gradient(135deg, rgba(15,125,94,0.35), rgba(20,46,92,0.35))",
-          }}
-        >
-          <div style={{ color: "#ffcf5a", fontWeight: "bold", marginBottom: "12px" }}>
-            Best Trade of the Day
-          </div>
-          <h2 style={{ fontSize: "54px", margin: "0 0 8px" }}>SEPLAT</h2>
+          <h2 style={{ marginTop: 0 }}>Best Trade of the Day</h2>
+          <h1 style={{ fontSize: "54px", margin: "0 0 8px" }}>SEPLAT</h1>
           <p style={{ color: "#c7d2e3", marginTop: 0 }}>SEPLAT ENERGY PLC</p>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginTop: "20px" }}>
@@ -312,71 +250,6 @@ const fetchStatus = async (token) => {
           >
             {JSON.stringify(statusData, null, 2)}
           </pre>
-        </div>
-
-        <div style={cardStyle}>
-          <h2 style={{ marginTop: 0 }}>Top Opportunities</h2>
-
-          {[
-            { symbol: "ACCESSCORP", name: "ACCESS HOLDINGS PLC", price: "₦25.90", score: "8.00", confidence: "Very High", tag: "Buy Candidate" },
-            { symbol: "AIRTELAFRI", name: "AIRTEL AFRICA PLC", price: "₦2,270.00", score: "7.92", confidence: "Very High", tag: "Buy Candidate" },
-            { symbol: "DANGCEM", name: "DANGOTE CEMENT PLC", price: "₦810.00", score: "7.92", confidence: "Very High", tag: "Buy Candidate" },
-            { symbol: "NESTLE", name: "NESTLE NIGERIA PLC", price: "₦3,395.00", score: "7.92", confidence: "Very High", tag: "Buy Candidate" },
-          ].map((item) => (
-            <div
-              key={item.symbol}
-              style={{
-                padding: "18px",
-                borderRadius: "16px",
-                border: "1px solid rgba(255,255,255,0.10)",
-                background: "rgba(255,255,255,0.03)",
-                marginBottom: "14px",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: "12px",
-                  flexWrap: "wrap",
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: "34px", fontWeight: "bold" }}>{item.symbol}</div>
-                  <div style={{ color: "#9fb3c8" }}>{item.name}</div>
-                </div>
-
-                <div>
-                  <span
-                    style={{
-                      padding: "10px 14px",
-                      borderRadius: "12px",
-                      background: "#1ec971",
-                      color: "#fff",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {item.tag}
-                  </span>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", gap: "40px", flexWrap: "wrap", marginTop: "18px" }}>
-                <div>
-                  <div style={{ color: "#9fb3c8" }}>Price</div>
-                  <div style={{ fontSize: "28px", fontWeight: "bold" }}>{item.price}</div>
-                </div>
-                <div>
-                  <div style={{ color: "#9fb3c8" }}>Score</div>
-                  <div style={{ fontSize: "28px", fontWeight: "bold", color: "#29d98a" }}>{item.score}</div>
-                </div>
-                <div>
-                  <div style={{ color: "#9fb3c8" }}>Confidence</div>
-                  <div style={{ fontSize: "24px", fontWeight: "bold" }}>{item.confidence}</div>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </div>
