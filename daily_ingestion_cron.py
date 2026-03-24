@@ -95,7 +95,7 @@ def get_expected_trade_date() -> datetime:
     now_wat = now_utc + timedelta(hours=1)
     
     # If it's after 5 PM WAT, we should have today's data
-    if now_wat.hour >= 17:
+    if now_wat.hour > 18 or (now_wat.hour == 18 and now_wat.minute >= 30):
         target_date = now_wat.date()
     else:
         # Before 5 PM, expect yesterday's data
