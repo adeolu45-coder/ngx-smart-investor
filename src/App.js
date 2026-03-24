@@ -26,7 +26,11 @@ export default function App() {
 
     setRefreshing(true);
     try {
-      const res = await fetch(`${API_BASE}/`);
+      const res = await fetch(`${API_BASE}/api/status`, {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
 
       const data = await res.json();
       setStatusData(data);
