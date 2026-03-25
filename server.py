@@ -485,15 +485,22 @@ async def create_status_check(input: StatusCheckCreate):
     return status_obj
 
 
-@api_router.get("/status", response_model=List[StatusCheck])
+@api_router.get("/status")
 async def get_status_checks():
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
+    try:
+        status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(100)
+
+        return {
+            "status": "ok",
+            "count": len(status_checks),
+            "data": status_checks
+        }
+
+    except Exception as e:
+        return {
+            "error": "Failed to fetch status",
+            "details": str(e)
+        }
 
 
 # ============================================
