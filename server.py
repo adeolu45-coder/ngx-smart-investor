@@ -104,13 +104,19 @@ api_router = APIRouter(prefix="/api")
 
 class StatusCheck(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    
+
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     client_name: str
+    stock: str
+    price: float
+    confidence: str
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class StatusCheckCreate(BaseModel):
     client_name: str
+    stock: str
+    price: float
+    confidence: str
 
 
 class StockPrice(BaseModel):
